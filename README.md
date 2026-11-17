@@ -66,6 +66,17 @@ like the [tracker's own `track()`](https://docs.umami.is/docs/tracker-functions)
 All functions return a promise and never throw. Calls made before the tracker has loaded
 are sent once it's ready.
 
+#### Page views for a custom path
+
+```ts
+umami.trackView('/servers/123')
+umami.trackView('/servers/123', '/servers') // with referrer
+```
+
+`trackView()` records a page view for any path, which is handy with `autoTrack: false` or
+for views that don't change the URL, like tabs or modals. Without arguments it tracks the
+current URL. `excludeSearch` and `excludeHash` are applied to the path you pass as well.
+
 ### Directive
 
 ```vue
@@ -236,7 +247,7 @@ Every option can be overridden at runtime with `NUXT_PUBLIC_UMAMI_<OPTION>`, e.g
 | `proxy: 'cloak'` / `'direct'` | `proxy: true` |
 | `urlOptions.excludeSearch` / `excludeHash` | `excludeSearch` / `excludeHash` |
 | `useDirective` | `directive` (on by default) |
-| `umTrackView()` | `useUmami().track()` |
+| `umTrackView(path, referrer)` | `useUmami().trackView(path, referrer)` |
 | `umTrackEvent(name, data)` | `useUmami().track(name, data)` |
 | `umIdentify(data)` | `useUmami().identify(data)` |
 | `umTrackRevenue(name, value, currency)` | `useUmami().trackRevenue(name, value, currency)` |

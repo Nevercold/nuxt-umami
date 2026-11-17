@@ -34,6 +34,12 @@ export interface Umami {
    * With an object or function, sends a custom payload or changes the default one.
    */
   track: (event?: string | Payload | ((payload: Payload) => Payload), data?: EventData) => Promise<void>
+  /**
+   * Track a page view. Without arguments it uses the current URL, like `track()`.
+   * Pass `url` to record a different path, and `referrer` to replace the referrer as well.
+   * `excludeSearch` and `excludeHash` apply to the given URL too.
+   */
+  trackView: (url?: string, referrer?: string) => Promise<void>
   /** Attach a distinct ID and optional session data to the current session. */
   identify(id: string, data?: EventData): Promise<void>
   /** Save session data. An `id` field is used as the distinct ID. */

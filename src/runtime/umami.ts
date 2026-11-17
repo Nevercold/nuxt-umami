@@ -1,7 +1,7 @@
 import { readonly, ref } from 'vue'
 import { joinURL } from 'ufo'
 import type { ModuleOptions } from '../module'
-import type { BeforeSend, Umami, UmamiTracker } from './types'
+import type { BeforeSend, Payload, Umami, UmamiTracker } from './types'
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]'])
 
@@ -16,10 +16,20 @@ function loadScript(src: string) {
   })
 }
 
+// The tracker only applies excludeSearch/excludeHash to URLs it reads itself
+function trimUrl(url: string, options: Pick<ModuleOptions, 'excludeSearch' | 'excludeHash'>) {
+  if (options.excludeHash)
+    url = url.replace(/#.*$/, '')
+  if (options.excludeSearch)
+    url = url.replace(/\?[^#]*/, '')
+  return url
+}
+
 export function createNoopUmami(consent = false): Umami {
   const noop = async () => {}
   return {
     track: noop,
+    trackView: noop,
     identify: noop,
     trackRevenue: noop,
     captureException: noop,
@@ -108,6 +118,12 @@ export function createUmami(options: ModuleOptions, baseURL: string): Umami {
 
   return {
     track: (...args: unknown[]) => call(t => t.track(...args)),
+    trackView: (url, referrer) =>
+      call(t => t.track((payload: Payload) => ({
+        ...payload,
+        ...(url && { url: trimUrl(url, options) }),
+        ...(referrer !== undefined && { referrer }),
+      }))),
     identify: (...args: unknown[]) => call(t => t.identify(...args)),
     trackRevenue: (name, revenue, currency = 'USD', data) =>
       call(t => t.track(name, { ...data, revenue, currency: currency.toUpperCase() })),

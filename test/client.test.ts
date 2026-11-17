@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ModuleOptions } from '../src/module'
 import { createUmami } from '../src/runtime/umami'
-import type { BeforeSend } from '../src/runtime/types'
+import type { BeforeSend, Payload } from '../src/runtime/types'
 
 const options: ModuleOptions = {
   enabled: true,
@@ -30,21 +30,32 @@ const options: ModuleOptions = {
 }
 
 const tracker = {
-  track: vi.fn(async () => {}),
-  identify: vi.fn(async () => {}),
-  captureException: vi.fn(async () => {}),
+  track: vi.fn(async (..._args: unknown[]) => {}),
+  identify: vi.fn(async (..._args: unknown[]) => {}),
+  captureException: vi.fn(async (..._args: unknown[]) => {}),
   getSession: () => ({ cache: undefined, website: 'site' }),
 }
 
 let loaded: string[] = []
+// set to keep the script "loading" until finishLoading() is called
+let holdLoad = false
+let finishLoading: (() => void) | undefined
 
 beforeEach(() => {
   loaded = []
+  holdLoad = false
+  finishLoading = undefined
   vi.spyOn(document.head, 'appendChild').mockImplementation(<T extends Node>(node: T) => {
     const script = node as unknown as HTMLScriptElement
     loaded.push(new URL(script.src).pathname)
-    window.umami = tracker
-    queueMicrotask(() => script.onload?.(new Event('load')))
+    const done = () => {
+      window.umami = tracker
+      script.onload?.(new Event('load'))
+    }
+    if (holdLoad)
+      finishLoading = done
+    else
+      queueMicrotask(done)
     return node
   })
 })
@@ -125,5 +136,88 @@ describe('createUmami', () => {
     const umami = createUmami({ ...options, ignoreLocalhost: true }, '/')
     await umami.track()
     expect(loaded).toEqual([])
+  })
+})
+
+describe('trackView', () => {
+  const sent: Payload[] = []
+  const defaults = { website: 'site', url: 'https://example.com/current?q=1#top', referrer: '/before' }
+
+  // behaves like the real tracker: builds the default payload and runs beforeSend
+  beforeEach(() => {
+    sent.length = 0
+    tracker.track.mockImplementation(async (...args: unknown[]) => {
+      const [event] = args
+      const payload = typeof event === 'function' ? event({ ...defaults }) : { ...defaults }
+      const result = await beforeSend()('event', payload)
+      if (result)
+        sent.push(result)
+    })
+  })
+
+  afterEach(() => {
+    tracker.track.mockImplementation(async () => {})
+  })
+
+  it('tracks the current url without arguments', async () => {
+    const umami = createUmami(options, '/')
+    await umami.trackView()
+    expect(sent).toEqual([defaults])
+  })
+
+  it('replaces the url', async () => {
+    const umami = createUmami(options, '/')
+    await umami.trackView('/servers/123')
+    expect(sent).toEqual([{ ...defaults, url: '/servers/123' }])
+  })
+
+  it('replaces url and referrer', async () => {
+    const umami = createUmami(options, '/')
+    await umami.trackView('/servers/123', '/servers')
+    expect(sent).toEqual([{ ...defaults, url: '/servers/123', referrer: '/servers' }])
+  })
+
+  it('applies excludeSearch and excludeHash to the given url', async () => {
+    const umami = createUmami({ ...options, excludeSearch: true, excludeHash: true }, '/')
+    await umami.trackView('/servers/123?tab=logs#bottom')
+    expect(sent[0]?.url).toBe('/servers/123')
+
+    const onlyHash = createUmami({ ...options, excludeHash: true }, '/')
+    await onlyHash.trackView('/servers/123?tab=logs#bottom')
+    expect(sent[1]?.url).toBe('/servers/123?tab=logs')
+  })
+
+  it('waits for the tracker when called before it has loaded', async () => {
+    holdLoad = true
+    const umami = createUmami(options, '/')
+    const pending = umami.trackView('/early')
+
+    await Promise.resolve()
+    expect(finishLoading).toBeDefined()
+    expect(tracker.track).not.toHaveBeenCalled()
+
+    finishLoading!()
+    await pending
+    expect(sent).toEqual([{ ...defaults, url: '/early' }])
+  })
+
+  it('sends nothing without consent', async () => {
+    const umami = createUmami({ ...options, consent: true }, '/')
+    await umami.trackView('/servers/123')
+
+    expect(loaded).toEqual([])
+    expect(sent).toEqual([])
+  })
+
+  it('passes the replaced url to beforeSend', async () => {
+    const umami = createUmami(options, '/')
+    const seen: unknown[] = []
+    umami.beforeSend((_type, payload) => {
+      seen.push(payload.url)
+      return payload
+    })
+
+    await umami.trackView('/servers/123')
+    expect(seen).toEqual(['/servers/123'])
   })
 })
