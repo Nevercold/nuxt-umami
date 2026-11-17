@@ -1,5 +1,5 @@
 {
-  "name": "@nevercold/nuxt-umami",
+  "name": "nuxt-umami-plugin",
   "version": "0.1.0",
   "description": "Umami analytics for Nuxt, with a first-party proxy, session replays and error tracking",
   "license": "MIT",

@@ -89,7 +89,7 @@ export interface ModuleOptions {
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
-    name: '@nevercold/nuxt-umami',
+    name: 'nuxt-umami-plugin',
     configKey: 'umami',
     compatibility: {
       nuxt: '>=4.0.0',

@@ -31,7 +31,7 @@ jobs:
       - name: publish
         run: |
           version=$(node -p "require('./package.json').version")
-          if npm view "@nevercold/nuxt-umami@$version" version >/dev/null 2>&1; then
+          if npm view "nuxt-umami-plugin@$version" version >/dev/null 2>&1; then
             echo "$version is already on npm, skipping"
           else
             npm publish --access public

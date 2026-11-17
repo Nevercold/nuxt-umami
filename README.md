@@ -1,7 +1,7 @@
-# @nevercold/nuxt-umami
+# nuxt-umami-plugin
 
-[![npm version](https://img.shields.io/npm/v/@nevercold/nuxt-umami)](https://npmjs.com/package/@nevercold/nuxt-umami)
-[![License](https://img.shields.io/npm/l/@nevercold/nuxt-umami)](./LICENSE)
+[![npm version](https://img.shields.io/npm/v/nuxt-umami-plugin)](https://npmjs.com/package/nuxt-umami-plugin)
+[![License](https://img.shields.io/npm/l/nuxt-umami-plugin)](./LICENSE)
 
 [Umami](https://umami.is) analytics for Nuxt 4.
 
@@ -23,13 +23,13 @@ Requires Nuxt 4. Some features need a recent Umami version; it's noted in the op
 ## Setup
 
 ```sh
-pnpm add @nevercold/nuxt-umami
+pnpm add nuxt-umami-plugin
 ```
 
 ```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
-  modules: ['@nevercold/nuxt-umami'],
+  modules: ['nuxt-umami-plugin'],
   umami: {
     websiteId: 'b59e9c65-ae32-47f1-8400-119fcf4861c4',
     host: 'https://umami.example.com',
