@@ -27,7 +27,13 @@ jobs:
       - run: pnpm lint
       - run: pnpm test:types
       - run: pnpm test
-      - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # npm authenticates through OIDC (trusted publishing), no token needed
+      - name: publish
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if npm view "@nevercold/nuxt-umami@$version" version >/dev/null 2>&1; then
+            echo "$version is already on npm, skipping"
+          else
+            npm publish --access public
+          fi
       - run: npx changelogen gh release ${{ github.ref_name }} --token ${{ secrets.GITHUB_TOKEN }}
