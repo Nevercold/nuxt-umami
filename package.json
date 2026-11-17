@@ -1,0 +1,70 @@
+{
+  "name": "@nevercold/nuxt-umami",
+  "version": "0.1.0",
+  "description": "Umami analytics for Nuxt, with a first-party proxy, session replays and error tracking",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nevercold/nuxt-umami.git"
+  },
+  "bugs": "https://github.com/Nevercold/nuxt-umami/issues",
+  "homepage": "https://github.com/Nevercold/nuxt-umami#readme",
+  "keywords": [
+    "nuxt",
+    "nuxt-module",
+    "umami",
+    "analytics",
+    "session-replay"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/types.d.mts",
+      "import": "./dist/module.mjs"
+    }
+  },
+  "main": "./dist/module.mjs",
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./dist/types.d.mts"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prepack": "nuxt-module-build build",
+    "dev": "nuxi dev playground",
+    "dev:build": "nuxi build playground",
+    "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit",
+    "release": "pnpm lint && pnpm test && changelogen --release --push"
+  },
+  "packageManager": "pnpm@12.21.0",
+  "dependencies": {
+    "@nuxt/kit": "^4.6.4",
+    "defu": "^6.1.7",
+    "h3": "^1.15.11",
+    "ufo": "^1.6.4"
+  },
+  "devDependencies": {
+    "@nuxt/eslint-config": "^1.17.0",
+    "@nuxt/module-builder": "^1.0.4",
+    "@nuxt/schema": "^4.6.4",
+    "@nuxt/test-utils": "^4.4.0",
+    "@types/node": "^26.6.6",
+    "changelogen": "^0.6.2",
+    "eslint": "^10.15.0",
+    "happy-dom": "^21.0.4",
+    "nuxt": "^4.6.4",
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.0",
+    "vue": "^3.5.45",
+    "vue-tsc": "^3.3.14"
+  }
+}
