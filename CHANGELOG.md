@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.1.1
+
+[compare changes](https://github.com/Nevercold/nuxt-umami/compare/v0.1.0...v0.1.1)
+
+### 🚀 Enhancements
+
+- Add trackView for page views with a custom path ([da7dc34](https://github.com/Nevercold/nuxt-umami/commit/da7dc34))
+
+### ❤️ Contributors
+
+- Moritz <moritz.walter.hy@gmail.com>
+
 ## v0.1.0
 
 [compare changes](https://github.com/Nevercold/nuxt-umami/compare/20d805ed5b55ee2f219a144fe9dbb8bd0eda870c...v0.1.0)
