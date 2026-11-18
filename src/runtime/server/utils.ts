@@ -4,6 +4,7 @@ import { joinURL } from 'ufo'
 import { useRuntimeConfig } from '#imports'
 import type { EventData } from '../types'
 import { getForwardHeaders } from './forward'
+import { UPSTREAM_TIMEOUT, describeError, describeResponse, warnOnce } from './log'
 
 export interface ServerEvent {
   /** Event name. Leave empty to track a page view. */
@@ -42,15 +43,27 @@ export async function sendUmamiEvent(event: H3Event, input: ServerEvent = {}): P
     data: input.data,
   }
 
+  let response: Response
   try {
-    const response = await fetch(joinURL(host, '/api/send'), {
+    response = await fetch(joinURL(host, '/api/send'), {
       method: 'POST',
       headers,
       body: JSON.stringify({ type: 'event', payload }),
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT),
     })
-    return response.ok
   }
-  catch {
+  catch (error) {
+    const reason = describeError(error)
+    warnOnce(`send:${reason}`, `sendUmamiEvent could not reach ${host}: ${reason}`)
     return false
   }
+
+  if (!response.ok) {
+    const details = describeResponse(response)
+    warnOnce(
+      `send:${response.status}`,
+      `sendUmamiEvent: ${host} answered with ${response.status}${details ? ` (${details})` : ''}`,
+    )
+  }
+  return response.ok
 }

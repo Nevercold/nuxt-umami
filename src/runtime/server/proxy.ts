@@ -2,6 +2,7 @@ import { createError, defineEventHandler, getRouterParam, readRawBody, setRespon
 import { joinURL } from 'ufo'
 import { useRuntimeConfig } from '#imports'
 import { getForwardHeaders } from './forward'
+import { UPSTREAM_TIMEOUT, describeError, describeResponse, isTimeout, warnOnce } from './log'
 
 type Route = { method: 'GET' | 'POST', cache?: boolean }
 
@@ -20,9 +21,10 @@ export default defineEventHandler(async (event) => {
   const path = getRouterParam(event, '_') ?? ''
   const scriptPath = config.public.umami.scriptPath.slice(1)
 
+  const isRecorderConfig = RECORDER_CONFIG.test(path)
   const route = path === scriptPath
     ? ROUTES['script.js']
-    : ROUTES[path] ?? (RECORDER_CONFIG.test(path) ? { method: 'GET' } as Route : undefined)
+    : ROUTES[path] ?? (isRecorderConfig ? { method: 'GET' } as Route : undefined)
 
   if (!host || !route)
     throw createError({ statusCode: 404 })
@@ -30,6 +32,8 @@ export default defineEventHandler(async (event) => {
   if (event.method !== route.method)
     throw createError({ statusCode: 405 })
 
+  // the website ID is part of the recorder config path, keep it out of the log keys
+  const logPath = isRecorderConfig ? 'api/websites/:id/recorder' : path
   const headers = getForwardHeaders(event)
   const body = route.method === 'POST' ? await readRawBody(event, false) : undefined
   let response: Response
@@ -38,10 +42,21 @@ export default defineEventHandler(async (event) => {
       method: route.method,
       headers,
       body: body ? new Uint8Array(body) : undefined,
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT),
     })
   }
-  catch {
-    throw createError({ statusCode: 502 })
+  catch (error) {
+    const reason = describeError(error)
+    warnOnce(`proxy:${logPath}:${reason}`, `Could not reach ${host} for /${logPath}: ${reason}`)
+    throw createError({ statusCode: isTimeout(error) ? 504 : 502 })
+  }
+
+  if (!response.ok) {
+    const details = describeResponse(response)
+    warnOnce(
+      `proxy:${logPath}:${response.status}`,
+      `${host} answered /${logPath} with ${response.status}${details ? ` (${details})` : ''}`,
+    )
   }
 
   setResponseStatus(event, response.status)

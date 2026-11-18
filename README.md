@@ -205,6 +205,19 @@ A few things to know:
   Cloudflare, every visitor will appear to come from your Nuxt server. Set
   `CLIENT_IP_HEADER=x-forwarded-for` on Umami to fix that, and `SKIP_LOCATION_HEADERS=1`
   if Cloudflare is in front of Umami.
+- If the Umami host is behind Cloudflare or another CDN/WAF, all proxied requests reach it
+  from your server's IP. Cloudflare may rate limit or block that IP, and `cf-connecting-ip`
+  points to your server instead of the visitor. Point the proxy at Umami's internal address
+  instead, so the requests don't pass the CDN at all:
+  ```sh
+  NUXT_UMAMI_HOST=http://umami.internal:3000
+  ```
+  The browser never sees this address, it only talks to `/_ux`.
+- When Umami can't be reached, the proxy answers with 502 (or 504 after 10 seconds) and logs
+  the reason, e.g. `ECONNREFUSED`. When Umami or a proxy in front of it answers with an
+  error, the status is passed through and logged together with the `server`, `cf-ray` and
+  `cf-mitigated` headers, so a Cloudflare block is easy to spot. Each kind of failure is
+  logged at most once a minute.
 - You can change the path with `proxyPath`. Pick something that doesn't contain words like
   "umami" or "analytics".
 
