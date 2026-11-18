@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.1.2
+
+[compare changes](https://github.com/Nevercold/nuxt-umami/compare/v0.1.1...v0.1.2)
+
+### 🩹 Fixes
+
+- Log why the proxy can't reach umami ([33c734b](https://github.com/Nevercold/nuxt-umami/commit/33c734b))
+
+### ❤️ Contributors
+
+- Moritz <moritz.walter.hy@gmail.com>
+
 ## v0.1.1
 
 [compare changes](https://github.com/Nevercold/nuxt-umami/compare/v0.1.0...v0.1.1)
